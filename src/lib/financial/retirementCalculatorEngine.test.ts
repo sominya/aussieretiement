@@ -178,4 +178,72 @@ describe("retirementCalculatorEngine", () => {
 
     expect(projection.stockPortfolioAtRetirement).toBeGreaterThan(12_000);
   });
+
+  it("moves offset cash into stocks after the home loan is paid off", () => {
+    const projection = calculateRetirementProjection(
+      {
+        ...DEFAULT_PROFILE,
+        currentAge: 64,
+        targetRetirementAge: 65,
+        currentStockPortfolioBalance: 0,
+        offsetAndSavingsBalance: 50_000,
+        homeLoanDebt: 10_000,
+        monthlyHomeLoanPayment: 10_000,
+        netTakeHomePayMonthly: 0,
+        fixedLivingCosts: 0,
+        monthlyLivingDiscretionary: 0,
+        rentMortgageMonthlyCost: 0,
+        monthlyInvestmentPropertyPayment: 0,
+        monthlyInvestmentPropertyRentalIncome: 0,
+        monthlyStockInvestment: 0,
+        monthlyPreTaxContributionsUser: 0,
+        monthlyPreTaxContributionsSpouse: 0,
+        monthlyPostTaxContributionsUser: 0,
+        monthlyPostTaxContributionsSpouse: 0,
+        monthlyAfterTaxSuperInvestment: 0,
+        planToBuyNewProperty: false,
+        planToSellPropertyInFuture: false,
+      },
+      2026,
+    );
+
+    expect(projection.debtAtRetirement).toBe(0);
+    expect(projection.stockPortfolioAtRetirement).toBeGreaterThan(50_000);
+  });
+
+  it("keeps offset cash out of stocks until all property debt is paid off", () => {
+    const projection = calculateRetirementProjection(
+      {
+        ...DEFAULT_PROFILE,
+        currentAge: 64,
+        targetRetirementAge: 65,
+        currentStockPortfolioBalance: 0,
+        offsetAndSavingsBalance: 50_000,
+        ownsProperty: true,
+        housingSituation: "rentingOutside",
+        currentPropertyAssetValue: 700_000,
+        homeLoanDebt: 300_000,
+        monthlyHomeLoanPayment: 0,
+        monthlyInvestmentPropertyPayment: 1_000,
+        monthlyInvestmentPropertyRentalIncome: 0,
+        netTakeHomePayMonthly: 0,
+        fixedLivingCosts: 0,
+        monthlyLivingDiscretionary: 0,
+        rentMortgageMonthlyCost: 0,
+        monthlyStockInvestment: 0,
+        monthlyPreTaxContributionsUser: 0,
+        monthlyPreTaxContributionsSpouse: 0,
+        monthlyPostTaxContributionsUser: 0,
+        monthlyPostTaxContributionsSpouse: 0,
+        monthlyAfterTaxSuperInvestment: 0,
+        planToBuyNewProperty: false,
+        planToSellPropertyInFuture: false,
+      },
+      2026,
+    );
+
+    expect(projection.debtAtRetirement).toBeGreaterThan(0);
+    expect(projection.stockPortfolioAtRetirement).toBe(0);
+    expect(projection.assetChartEntries.at(-1)?.cashOffset).toBe(50_000);
+  });
 });

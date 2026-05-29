@@ -659,10 +659,24 @@ function simulateAccumulation(profile: UserProfile, currentCalendarYear: number)
       investmentPropertyDebt - investmentPrincipalPayment,
     );
 
+    if (primaryHomeLoanDebt === 0) {
+      activeHousingPayment = 0;
+    }
+
+    if (investmentPropertyDebt === 0) {
+      investmentDebtPayment = 0;
+    }
+
+    homeLoanDebt = primaryHomeLoanDebt + investmentPropertyDebt;
+
+    if (homeLoanDebt === 0 && cashOffset > 0) {
+      stockPortfolio += cashOffset;
+      cashOffset = 0;
+    }
+
     primaryPropertyValue *= 1 + propertyMonthlyGrowth;
     investmentPropertyValue *= 1 + propertyMonthlyGrowth;
     propertyValue = primaryPropertyValue + investmentPropertyValue;
-    homeLoanDebt = primaryHomeLoanDebt + investmentPropertyDebt;
     superUser =
       superUser * (1 + superMonthlyReturn) +
       applyConcessionalContributionTax(profile.monthlyPreTaxContributionsUser) +
