@@ -19,21 +19,39 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
+          cache: 'npm'
 
-      - name: npm install, build, and test
+      - name: Install dependencies, build, and test
         run: |
-          npm install
-          npm run build --if-present
+          npm ci
           npm run test --if-present
+          npm run build --if-present
+
+      - name: Prepare standalone deployment artifact
+        run: |
+          mkdir -p deploy/.next
+          cp -R .next/standalone/. deploy/
+          cp -R .next/static deploy/.next/static
+          cp -R public deploy/public
+          cat > deploy/package.json <<'EOF'
+          {
+            "name": "aussieretire-ai-standalone",
+            "private": true,
+            "scripts": {
+              "start": "node server.js"
+            }
+          }
+          EOF
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: deploy
+          include-hidden-files: true
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,6 +62,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+          path: deploy
       
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -51,5 +70,5 @@ jobs:
         with:
           app-name: 'aussieretire'
           slot-name: 'Production'
-          package: .
+          package: deploy
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E8BF2BAC73DB4F9E89987A447DF18283 }}
